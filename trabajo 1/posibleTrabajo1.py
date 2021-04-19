@@ -63,13 +63,14 @@ class Bola:
         self.color = c
         self.posX = px
         self.posY = py
-        self.pasos = {}
+        self.pasos = []
         self.crear_pasos()
         self.score = 0
 
     def crear_pasos(self):
         for i in range(400):
-            self.pasos[i] = numpy.random.randint(0, 4)
+            #self.pasos[i] = numpy.random.randint(0, 4)
+            self.pasos.append(numpy.random.randint(0, 4))
         # print(self.pasos)
 
     def mover(self):
@@ -108,7 +109,10 @@ class Bola:
         else:
             self.score = 1000/numpy.sqrt(numpy.power(self.posX - destX, 2) + numpy.power(self.posY - destY, 2))
         print(self.score)
-
+    def returnScore(self):
+        return(self.score)
+    def returnPasos(self):
+        return (self.pasos)
 
 def dibujar_fondo():
     screen.fill(WHITE)
@@ -148,16 +152,23 @@ def all_dead():
         else:
             return False
 
+def write_score():
+    fic = open("text_1.txt", "w")
+    for i in range(len(lista_bolas)):
+        fic.write(str(lista_bolas[i].returnPasos()))
+        fic.write("\n")
+    fic.close()
+
 
 def iniciar_simulacion():
     done = False
 
-    crea_bolas(120)
+    crea_bolas(10)
     while done is not True:
         if not all_dead():
             mover_bolas()
-        else:
-            calcular_score()
+        #else:
+           # calcular_score()
         for event in pygame.event.get():  # Registra eventos variados
             if event.type == pygame.QUIT:  # Cerrar el programa?
                 done = True  # Si
@@ -171,3 +182,6 @@ def iniciar_simulacion():
 
 
 iniciar_simulacion()
+calcular_score()
+
+write_score()
