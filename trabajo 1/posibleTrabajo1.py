@@ -81,22 +81,6 @@ class Bola:
             # self.pasos[i] = numpy.random.randint(0, 4)
             self.pasos.append(numpy.random.randint(0, 4))
 
-<<<<<<< HEAD
-    def __init__(self, v, c, px, py):
-        self.velocidad = v
-        self.color = c
-        self.posX = px
-        self.posY = py
-        self.pasos = []
-        self.crear_pasos()
-        self.score = 0
-
-    def crear_pasos(self):
-        for i in range(400):
-            #self.pasos[i] = numpy.random.randint(0, 4)
-            self.pasos.append(numpy.random.randint(0, 4))
-=======
->>>>>>> 2938101a026b249d8803c1374b33efc791031005
         # print(self.pasos)
 
     def mover(self):
@@ -133,14 +117,6 @@ class Bola:
         if self.choque:
             self.score = 0
         else:
-<<<<<<< HEAD
-            self.score = 1000/numpy.sqrt(numpy.power(self.posX - destX, 2) + numpy.power(self.posY - destY, 2))
-        print(self.score)
-    def returnScore(self):
-        return(self.score)
-    def returnPasos(self):
-        return (self.pasos)
-=======
             self.score = 1000 / numpy.sqrt(numpy.power(self.posX - destX, 2) + numpy.power(self.posY - destY, 2))
         # print(self.score)
 
@@ -150,7 +126,6 @@ class Bola:
     def get_score(self):
         return self.score
 
->>>>>>> 2938101a026b249d8803c1374b33efc791031005
 
 def dibujar_fondo():
     screen.fill(WHITE)
@@ -276,14 +251,6 @@ def mutar_bolitas():
 def iniciar_simulacion():
     done = False
 
-<<<<<<< HEAD
-    crea_bolas(10)
-    while done is not True:
-        if not all_dead():
-            mover_bolas()
-        #else:
-           # calcular_score()
-=======
     crea_bolas(poblacion)
     while done is not True:
         if not all_dead():
@@ -299,7 +266,6 @@ def iniciar_simulacion():
             mutar_bolitas()
 
             # input("Press Enter to continue...")
->>>>>>> 2938101a026b249d8803c1374b33efc791031005
         for event in pygame.event.get():  # Registra eventos variados
             if event.type == pygame.QUIT:  # Cerrar el programa?
                 done = True  # Si
@@ -313,10 +279,4 @@ def iniciar_simulacion():
 
 
 iniciar_simulacion()
-<<<<<<< HEAD
-calcular_score()
-
-write_score()
-=======
 # print(Parejas(10))
->>>>>>> 2938101a026b249d8803c1374b33efc791031005
