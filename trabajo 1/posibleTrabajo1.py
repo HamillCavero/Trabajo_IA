@@ -57,18 +57,27 @@ class Bola:
     distancia = 0
     is_ded = False
     choque = False
+    mutacion = 0.01
 
-    def __init__(self, v, c, px, py):
-        self.velocidad = v
-        self.color = c
-        self.posX = px
-        self.posY = py
-        self.pasos = []
-        self.crear_pasos()
-        self.score = 0
+    def __init__(self, v, c, px, py, pasos_maximos=None):
+        if pasos_maximos == None:
+            self.velocidad = v
+            self.color = c
+            self.posX = px
+            self.posY = py
+            self.pasos = []
+            self.score = 0
+        else:
+            self.velocidad = v
+            self.color = c
+            self.posX = px
+            self.posY = py
+            self.pasos = []
+            self.crear_pasos(pasos_maximos)
+            self.score = 0
 
-    def crear_pasos(self):
-        for i in range(400):
+    def crear_pasos(self, _pasos_maximos):
+        for i in range(_pasos_maximos):
             # self.pasos[i] = numpy.random.randint(0, 4)
             self.pasos.append(numpy.random.randint(0, 4))
 
@@ -125,12 +134,13 @@ def dibujar_fondo():
 lista_bolas = {}
 destinoX = 200
 destinoY = 50
-poblacion = 20
+poblacion = 32
+pasos_maximos = 200
 
 
 def crea_bolas(N):
     for _ in range(N):
-        lista_bolas[_] = Bola(3, RED, 200, 350)
+        lista_bolas[_] = Bola(3, RED, 200, 350, pasos_maximos)
     # print(lista_bolas)
     # input("aaaa")
 
@@ -169,7 +179,7 @@ def revivir(bola):
 
 def mostrar_lista():
     for _ in lista_bolas:
-        print(_, "  ", lista_bolas[_].get_score())
+        print(_, "  ", lista_bolas[_].get_score(), lista_bolas[_].get_pasos())
 
 
 def Parejas(N):
@@ -184,6 +194,7 @@ def Parejas(N):
 def selecciona_bolitas():
     print('---Seleccion----')
     lista_seleccion = Parejas(poblacion)
+    print('Parejas', lista_seleccion)
     for k, v in lista_seleccion.items():
         if lista_bolas[k].score >= lista_bolas[v].score:
             revivir(lista_bolas[k])
@@ -192,28 +203,42 @@ def selecciona_bolitas():
 
 def cruzar_bolitas():
     print('-----Cruce ------')
-    Pareja = Parejas(poblacion)
-    # print('Parejas', Pareja)
+    lista_seleccion = Parejas(poblacion)
+    print('Parejas', lista_seleccion)
     item = 0
-    for k, v in Pareja.items():
+    for k, v in lista_seleccion.items():
         if item % 2 == 0:
-            Punto = random.randint(1, poblacion - 2)
+            Punto = random.randint(1, pasos_maximos)
             print('punto', Punto)
-            Hijo1 = []
-            Hijo2 = []
+            # Hijo1 = Bola(3, RED, 200, 350,pasos_maximos)
+            # Hijo2 = Bola(3, RED, 200, 350,pasos_maximos)
+            Hijo1 = Bola(3, RED, 200, 350)
+            Hijo2 = Bola(3, RED, 200, 350)
             Padre1 = lista_bolas[k]
             Padre2 = lista_bolas[v]
-            Hijo1.extend(Padre1.pasos[0:Punto])
-            Hijo1.extend(Padre2.pasos[Punto:])
-            Hijo2.extend(Padre2.pasos[0:Punto])
-            Hijo2.extend(Padre1.pasos[Punto:])
+
+            Hijo1.get_pasos().extend(Padre1.pasos[0:Punto])
+            Hijo1.get_pasos().extend(Padre2.pasos[Punto:])
+            Hijo2.get_pasos().extend(Padre2.pasos[0:Punto])
+            Hijo2.get_pasos().extend(Padre1.pasos[Punto:])
+
+            # Hijo1.extend(Padre1.pasos[0:Punto])
+            # Hijo1.extend(Padre2.pasos[Punto:])
+            # Hijo2.extend(Padre2.pasos[0:Punto])
+            # Hijo2.extend(Padre1.pasos[Punto:])
             lista_bolas[k] = Hijo1
             lista_bolas[v] = Hijo2
         item = item + 1
 
 
 def mutar_bolitas():
-    pass
+    for _ in lista_bolas:
+        if random.random() > lista_bolas[_].mutacion:
+            print(lista_bolas[_].pasos)
+            random_pos = numpy.random.randint(0, pasos_maximos - 1)
+            random_val = numpy.random.randint(0, 4)
+            lista_bolas[_].pasos[random_pos] = random_val
+            print(lista_bolas[_].pasos)
 
 
 def iniciar_simulacion():
@@ -231,9 +256,9 @@ def iniciar_simulacion():
             mostrar_lista()
             cruzar_bolitas()
             mostrar_lista()
-
             mutar_bolitas()
-            input("Press Enter to continue...")
+
+            # input("Press Enter to continue...")
         for event in pygame.event.get():  # Registra eventos variados
             if event.type == pygame.QUIT:  # Cerrar el programa?
                 done = True  # Si
