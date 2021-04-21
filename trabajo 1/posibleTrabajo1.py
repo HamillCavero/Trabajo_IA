@@ -295,3 +295,4 @@ Pasos_MAX = 200
 
 juego = Juego(Ini_X, Ini_Y, Population, Pasos_MAX)
 juego.iniciar_simulacion()
+print("a")
