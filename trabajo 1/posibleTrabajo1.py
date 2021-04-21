@@ -24,10 +24,8 @@ Colors_index = [_ for _ in range(len(Colors))]
 # Ancho y alto de los bloques
 WIDTH = 20
 HEIGHT = 20
-
 # espacio entre casillas
 MARGIN = 1
-# alto y largo de la matriz
 
 # Iniciar pygame
 pygame.init()
@@ -37,7 +35,6 @@ ALTO = 400
 LARGO = 400
 WINDOW_SIZE = [ALTO, LARGO]
 screen = pygame.display.set_mode(WINDOW_SIZE)
-# print(screen.get_height())
 # Titulo
 pygame.display.set_caption("Proyecto ia")
 
@@ -83,10 +80,16 @@ class Bola:
 
         # print(self.pasos)
 
-    def mover(self):
+    def objetivo(self, objetivoX, objetivoY):
+        return numpy.sqrt(numpy.power(self.posX - objetivoX, 2) + numpy.power(self.posY - objetivoY, 2)) < 10
+
+    def mover(self, objetivoX, objetivoY):
         if not self.is_ded:
             if not self.choque:
-                if self.posY < screen.get_height() and self.posX < screen.get_width() and self.posX >= 0 and self.posY >= 0:
+                if self.objetivo(objetivoX, objetivoY):
+                    self.is_ded=True
+                    print("LLEGUE AAAAAA")
+                elif screen.get_height() > self.posY >= 0 and screen.get_width() > self.posX >= 0:
                     if self.pasoActual < len(self.pasos):
                         if self.pasos[self.pasoActual] == 0:
                             self.posX -= self.velocidad
@@ -117,7 +120,8 @@ class Bola:
         if self.choque:
             self.score = 0
         else:
-            self.score = 1000 / numpy.sqrt(numpy.power(self.posX - destX, 2) + numpy.power(self.posY - destY, 2))
+            self.score = 1000 / numpy.sqrt(numpy.power(self.posX - destX, 2) + numpy.power(self.posY - destY, 2)) + (
+                    len(self.pasos) - self.pasoActual)
         # print(self.score)
 
     def get_pasos(self):
@@ -127,149 +131,167 @@ class Bola:
         return self.score
 
 
-def dibujar_fondo():
-    screen.fill(WHITE)
+class Juego:
+    print("AAAA")
+
+    def dibujar_fondo(self):
+        screen.fill(WHITE)
+
+    def crea_bolas(self, N):
+        for _ in range(N):
+            self.lista_bolas[_] = Bola(3, RED, 200, 350, self.pasos_maximos)
+        # print(lista_bolas)
+        # input("aaaa")
+
+    def mover_bolas(self):
+        for bb in self.lista_bolas:
+            if self.lista_bolas[bb].is_ded is False:
+                # print("Bola: ", bb)
+                self.lista_bolas[bb].mover( self.destinoX, self.destinoY )
+
+    def dibujar_bolas(self):
+        for i in range(len(self.lista_bolas)):
+            self.lista_bolas[i].graficar(screen)
+
+    def calcular_score(self):
+        for i in range(len(self.lista_bolas)):
+            self.lista_bolas[i].calcularScore(self.destinoX, self.destinoY)
+
+    def all_dead(self):
+        for _ in self.lista_bolas:
+            if self.lista_bolas[_].is_ded:
+                return True
+            else:
+                return False
+
+    def revivir(self, bola):
+        bola.is_ded = False
+        bola.choque = False
+        bola.posX = 200
+        bola.posY = 350
+
+    def mostrar_lista(self):
+        for _ in self.lista_bolas:
+            print(_, "  ", self.lista_bolas[_].get_score(), self.lista_bolas[_].get_pasos())
+
+    def Parejas(self):
+        Aleatorio = random.sample(range(int(self.poblacion / 2), self.poblacion), int(self.poblacion / 2))
+        Pareja = {}
+        for i in range(int(self.poblacion / 2)):
+            Pareja[i] = Aleatorio[i]
+            Pareja[Aleatorio[i]] = i
+        return Pareja
+
+    def selecciona_bolitas(self):
+        print('---Seleccion----')
+        lista_seleccion = self.Parejas()
+        # print('Parejas', lista_seleccion)
+        for k, v in lista_seleccion.items():
+            if self.lista_bolas[k].score >= self.lista_bolas[v].score:
+                self.revivir(self.lista_bolas[k])
+                self.lista_bolas[v] = self.lista_bolas[k]
+
+    def cruzar_bolitas(self):
+        print('-----Cruce ------')
+        lista_seleccion = self.Parejas()
+        # print('Parejas', lista_seleccion)
+        item = 0
+        for k, v in lista_seleccion.items():
+            if item % 2 == 0:
+                Punto = random.randint(1, self.pasos_maximos)
+                # print('punto', Punto)
+                Hijo1 = Bola(3, RED, 200, 350)
+                Hijo2 = Bola(3, RED, 200, 350)
+                Padre1 = self.lista_bolas[k]
+                Padre2 = self.lista_bolas[v]
+
+                Hijo1.get_pasos().extend(Padre1.pasos[0:Punto])
+                Hijo1.get_pasos().extend(Padre2.pasos[Punto:])
+                Hijo2.get_pasos().extend(Padre2.pasos[0:Punto])
+                Hijo2.get_pasos().extend(Padre1.pasos[Punto:])
+
+                # Hijo1.extend(Padre1.pasos[0:Punto])
+                # Hijo1.extend(Padre2.pasos[Punto:])
+                # Hijo2.extend(Padre2.pasos[0:Punto])
+                # Hijo2.extend(Padre1.pasos[Punto:])
+                self.lista_bolas[k] = Hijo1
+                self.lista_bolas[v] = Hijo2
+            item = item + 1
+
+    def mutar_bolitas(self):
+        for _ in self.lista_bolas:
+            print(random.random())
+            if random.random() > self.lista_bolas[_].mutacion:
+                # print(lista_bolas[_].pasos)
+                random_pos = numpy.random.randint(0, self.pasos_maximos - 1)
+                random_val = numpy.random.randint(0, 4)
+                self.lista_bolas[_].pasos[random_pos] = random_val
+                # print(lista_bolas[_].pasos)
+
+    def dibujar_destino(self):
+        pygame.draw.circle(screen, GREEN, [self.destinoX, self.destinoY], 5)
+
+    def iniciar_simulacion(self):
+        done = False
+        go = False
+        while go is not True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # Cerrar el programa?
+                    done = True  # Si
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+
+                    if event.button == 1:
+                        pos = pygame.mouse.get_pos()
+                        print("Click ", pos, )
+                    elif event.button == 3:
+                        go = True
+                # elif event.type == pygame.key.get_pressed():
+                #     go = True
+                #     print("aa")
+            self.dibujar_fondo()
+            clock.tick(30)
+            pygame.display.flip()
+
+        self.crea_bolas(self.poblacion)
+        while done is not True:
+            if not self.all_dead():
+                self.mover_bolas()
+            else:
+                self.calcular_score()
+                # print("Bolitas resultado")
+                # self.mostrar_lista()
+                self.selecciona_bolitas()
+                # self.mostrar_lista()
+                self.cruzar_bolitas()
+                # self.mostrar_lista()
+                self.mutar_bolitas()
+
+                # input("Press Enter to continue...")
+            for event in pygame.event.get():  # Registra eventos variados
+                if event.type == pygame.QUIT:  # Cerrar el programa?
+                    done = True  # Si
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    print(pygame.mouse.get_pos())
+            self.dibujar_fondo()
+            self.dibujar_destino()
+
+            self.dibujar_bolas()
+            clock.tick(30)
+            pygame.display.flip()
+        pygame.quit()  # no borrar
+
+    def __init__(self, IX, IY, PP, PM):
+        self.lista_bolas = {}
+        self.destinoX = IX
+        self.destinoY = IY
+        self.poblacion = PP
+        self.pasos_maximos = PM
 
 
-lista_bolas = {}
-destinoX = 200
-destinoY = 50
-poblacion = 32
-pasos_maximos = 200
+Ini_X = 200
+Ini_Y = 50
+Population = 32
+Pasos_MAX = 200
 
-
-def crea_bolas(N):
-    for _ in range(N):
-        lista_bolas[_] = Bola(3, RED, 200, 350, pasos_maximos)
-    # print(lista_bolas)
-    # input("aaaa")
-
-
-def mover_bolas():
-    for bb in lista_bolas:
-        if lista_bolas[bb].is_ded is False:
-            # print("Bola: ", bb)
-            lista_bolas[bb].mover()
-
-
-def dibujar_bolas():
-    for i in range(len(lista_bolas)):
-        lista_bolas[i].graficar(screen)
-
-
-def calcular_score():
-    for i in range(len(lista_bolas)):
-        lista_bolas[i].calcularScore(destinoX, destinoY)
-
-
-def all_dead():
-    for _ in lista_bolas:
-        if lista_bolas[_].is_ded:
-            return True
-        else:
-            return False
-
-
-def revivir(bola):
-    bola.is_ded = False
-    bola.choque = False
-    bola.posX = 200
-    bola.posY = 350
-
-
-def mostrar_lista():
-    for _ in lista_bolas:
-        print(_, "  ", lista_bolas[_].get_score(), lista_bolas[_].get_pasos())
-
-
-def Parejas(N):
-    Aleatorio = random.sample(range(int(N / 2), N), int(N / 2))
-    Pareja = {}
-    for i in range(int(N / 2)):
-        Pareja[i] = Aleatorio[i]
-        Pareja[Aleatorio[i]] = i
-    return Pareja
-
-
-def selecciona_bolitas():
-    print('---Seleccion----')
-    lista_seleccion = Parejas(poblacion)
-    print('Parejas', lista_seleccion)
-    for k, v in lista_seleccion.items():
-        if lista_bolas[k].score >= lista_bolas[v].score:
-            revivir(lista_bolas[k])
-            lista_bolas[v] = lista_bolas[k]
-
-
-def cruzar_bolitas():
-    print('-----Cruce ------')
-    lista_seleccion = Parejas(poblacion)
-    print('Parejas', lista_seleccion)
-    item = 0
-    for k, v in lista_seleccion.items():
-        if item % 2 == 0:
-            Punto = random.randint(1, pasos_maximos)
-            print('punto', Punto)
-            # Hijo1 = Bola(3, RED, 200, 350,pasos_maximos)
-            # Hijo2 = Bola(3, RED, 200, 350,pasos_maximos)
-            Hijo1 = Bola(3, RED, 200, 350)
-            Hijo2 = Bola(3, RED, 200, 350)
-            Padre1 = lista_bolas[k]
-            Padre2 = lista_bolas[v]
-
-            Hijo1.get_pasos().extend(Padre1.pasos[0:Punto])
-            Hijo1.get_pasos().extend(Padre2.pasos[Punto:])
-            Hijo2.get_pasos().extend(Padre2.pasos[0:Punto])
-            Hijo2.get_pasos().extend(Padre1.pasos[Punto:])
-
-            # Hijo1.extend(Padre1.pasos[0:Punto])
-            # Hijo1.extend(Padre2.pasos[Punto:])
-            # Hijo2.extend(Padre2.pasos[0:Punto])
-            # Hijo2.extend(Padre1.pasos[Punto:])
-            lista_bolas[k] = Hijo1
-            lista_bolas[v] = Hijo2
-        item = item + 1
-
-
-def mutar_bolitas():
-    for _ in lista_bolas:
-        if random.random() > lista_bolas[_].mutacion:
-            print(lista_bolas[_].pasos)
-            random_pos = numpy.random.randint(0, pasos_maximos - 1)
-            random_val = numpy.random.randint(0, 4)
-            lista_bolas[_].pasos[random_pos] = random_val
-            print(lista_bolas[_].pasos)
-
-
-def iniciar_simulacion():
-    done = False
-
-    crea_bolas(poblacion)
-    while done is not True:
-        if not all_dead():
-            mover_bolas()
-        else:
-            calcular_score()
-            print("Bolitas resultado")
-            mostrar_lista()
-            selecciona_bolitas()
-            mostrar_lista()
-            cruzar_bolitas()
-            mostrar_lista()
-            mutar_bolitas()
-
-            # input("Press Enter to continue...")
-        for event in pygame.event.get():  # Registra eventos variados
-            if event.type == pygame.QUIT:  # Cerrar el programa?
-                done = True  # Si
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                print(pygame.mouse.get_pos())
-        dibujar_fondo()
-        dibujar_bolas()
-        clock.tick(30)
-        pygame.display.flip()
-    pygame.quit()  # no borrar
-
-
-iniciar_simulacion()
-# print(Parejas(10))
+juego = Juego(Ini_X, Ini_Y, Population, Pasos_MAX)
+juego.iniciar_simulacion()
