@@ -22,10 +22,28 @@ Colors_index = [_ for _ in range(len(Colors))]
 # print(Colors_index)
 
 # Ancho y alto de los bloques
-WIDTH = 20
-HEIGHT = 20
+# WIDTH = 20
+# HEIGHT = 20
+
 # espacio entre casillas
 MARGIN = 1
+global grid_1
+grid_1 = [[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
+          [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
+          [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
+          [7, 7, 7, 7, 7, 7, 0, 0, 0, 7, 7, 7],
+          [7, 7, 7, 0, 0, 0, 0, 0, 0, 7, 7, 7],
+          [7, 7, 7, 0, 0, 0, 0, 0, 0, 7, 7, 7],
+          [7, 7, 7, 0, 0, 0, 0, 0, 7, 7, 7, 7],
+          [7, 7, 7, 0, 7, 0, 0, 0, 0, 7, 7, 7],
+          [7, 7, 7, 0, 7, 0, 0, 0, 0, 7, 7, 7],
+          [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
+          [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
+          [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]]
+
+# alto y largo de la matriz
+celdaH = len(grid_1)
+celdaV = len(grid_1[0])
 
 # Iniciar pygame
 pygame.init()
@@ -37,6 +55,11 @@ WINDOW_SIZE = [ALTO, LARGO]
 screen = pygame.display.set_mode(WINDOW_SIZE)
 # Titulo
 pygame.display.set_caption("Proyecto ia")
+
+WIDTH = LARGO/celdaH
+HEIGHT = ALTO/celdaV
+
+
 
 # Terminó?
 done = False
@@ -114,7 +137,8 @@ class Bola:
                     print("choque y mori")
 
     def graficar(self, screen):
-        pygame.draw.circle(screen, self.color, [self.posX, self.posY], 5)
+        pygame.draw.circle(screen, self.color, [self.posX, self.posY], 5,1)
+
 
     def calcularScore(self, destX, destY):
         if self.choque:
@@ -136,6 +160,25 @@ class Juego:
 
     def dibujar_fondo(self):
         screen.fill(WHITE)
+        for row in range(celdaH):
+            for column in range(celdaV):
+                color = WHITE
+                if grid_1[row][column] == 1:
+                    color = GREEN
+                elif grid_1[row][column] == 7:
+                    color = RED
+                elif grid_1[row][column] == 3:
+                    color = GRAY
+                elif grid_1[row][column] == 5:
+                    color = BLACK
+                elif grid_1[row][column] == 11:
+                    color = ORANGE
+                pygame.draw.rect(screen,
+                                 color,
+                                 [(MARGIN + WIDTH) * column,
+                                  (MARGIN + HEIGHT) * row,
+                                  WIDTH,
+                                  HEIGHT])
 
     def crea_bolas(self, N):
         for _ in range(N):
@@ -231,6 +274,20 @@ class Juego:
     def dibujar_destino(self):
         pygame.draw.circle(screen, GREEN, [self.destinoX, self.destinoY], 5)
 
+    def borrar_ficha(self,_row, _column):
+        if grid_1[_row][_column] == 1:
+            grid_1[_row][_column] = 0
+
+    def insertar_pieza(self,_row, _column):
+        global grid_1
+        # grid2 = grid_1.copy()
+        grid2 = copy.deepcopy(grid_1)
+        if (grid2[_row][_column] + 1) % 2 != 0:
+            grid2[_row ][_column] += 1
+        else:
+            return grid_1
+        grid_1 = copy.deepcopy(grid2)
+
     def iniciar_simulacion(self):
         done = False
         go = False
@@ -238,13 +295,22 @@ class Juego:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # Cerrar el programa?
                     done = True  # Si
+                    pygame.quit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-
-                    if event.button == 1:
-                        pos = pygame.mouse.get_pos()
-                        print("Click ", pos, )
-                    elif event.button == 3:
+                    pos = pygame.mouse.get_pos()
+                    if event.button == 2:
                         go = True
+                    if pos[0] <= (WIDTH + MARGIN) * celdaV and pos[1] <= (HEIGHT + MARGIN) * celdaH:
+                        column = round( pos[0] // (WIDTH + MARGIN))
+                        row = round( pos[1] // (HEIGHT + MARGIN))
+                        print(grid_1[row][column])
+                        if event.button == 3:
+                            if grid_1[row][column] != 7 and grid_1[row][column] != 0:
+                                self.borrar_ficha(row, column)
+                        elif event.button == 1:
+                            self.insertar_pieza(row, column)
+                        print("Click ", pos, "Grid coordinates: ", row, column)
+
                 # elif event.type == pygame.key.get_pressed():
                 #     go = True
                 #     print("aa")
