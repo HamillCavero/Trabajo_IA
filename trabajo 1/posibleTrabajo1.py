@@ -424,32 +424,41 @@ class Juego:
         # for _ in range(len(self.paredes[0:])):
         #     self.paredes[0].unir(self.paredes[_].get_body())
         #     # pygame.Rect.unionall_ip(self.paredes[0].body, self.paredes[_].body)
-    def guardar_mapa(self):
-        df=pd.DataFrame(grid_1)
-        df.to_csv("ejemplo.csv")
+    
 
-    def cargar_mapa(self):
+    def guardar_mapa2(self):
+        fic=open("mapa_save.txt","w")
+        for i in range(10):
+            for j in range(10):
+                fic.write(str(grid_1[i][j]))
+       
+    def cargar_mapa2(self):
         global grid_1
-        tabla_mapa=pd.read_csv("ejemplo.csv")
-        tabla_mapa=tabla_mapa.dropna(how="all")
-  
-        grid_2=tabla_mapa.values.tolist()
-        grid_3=[]
-        for i in range(len(grid_2)):
-           for j in range(len(grid_2[i])):
-                if grid_2[i][j]==3:
-                    grid_2[i][j]=1
-                grid_3.append(grid_2[i][j])     
+        fic=open("mapa_save.txt","r")
+        dtos=fic.read()
+        sv=[]
+        w=10
+        h=10
+        jb=[[0 for x in range(w)] for y in range(h)]
+        fila=0
+        for lines in dtos:
+            sv.extend(lines.split())
 
+        sv=[int(x) for x in sv]
+  
+        for f in range(int(len(sv)/10)):
+            for g in range(int(len(sv)/10)):
+                jb[f][g]=sv[fila]
+                print(fila)
+                fila=fila+1
+                
+        grid_1=copy.deepcopy(jb)
         for i in range(len(grid_1)):
            for j in range(len(grid_1[i])):
-            
-                if grid_2[i][0]>=1:
-                    grid_2[i][j]=0
-                grid_1[i][j]=grid_2[i][j]
+                if grid_1[i][j]==3:
+                    grid_1[i][j]=1
+        #return grid_1
         
-        return grid_1
-
 
 
     def dibujar_paredes(self):
@@ -472,11 +481,11 @@ class Juego:
                     pygame.quit()
 
                 elif event.type==pygame.KEYDOWN:
-                   if event.key==pygame.K_8:
+                    if event.key==pygame.K_9:
                         go=True
-                        self.cargar_mapa()
+                        self.cargar_mapa2()
                         self.abrir_guardado()
-                        self.cargar_ultimagen()  
+                        self.cargar_ultimagen()
                         self.crear_laberinto()
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -529,6 +538,7 @@ class Juego:
            self.dibujar_bolas()
            clock.tick(30)
            pygame.display.flip()
+        juego.guardar_mapa2()
         pygame.quit()  # no borrar
         #while True:
          #   self.dibujar_fondo(0)
@@ -554,11 +564,10 @@ Des_Y = 50
 Population = 128
 Pasos_MAX = 400
 #print(grid_1)
+
 juego = Juego(Ini_X, Ini_Y, Des_X, Des_Y, Population, Pasos_MAX, Velocidad_bola)
 juego.iniciar_simulacion()
 juego.guardar_lista(Ini_X,Ini_Y,Des_X,Des_Y,Velocidad_bola,Population,Pasos_MAX)
-juego.guardar_mapa()
-#print(juego.cargar_mapa())
 juego.guardar_ultimageneracion()
-#juego.cargar_ultimagen()
+
 print("a")
