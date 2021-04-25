@@ -9,7 +9,7 @@ import csv
 import pandas as pd
 
 
-# Define los coles a usarse, pueden agregarse mas
+# Define los colores a usarse, pueden agregarse mas
 RED = (230, 25, 75)
 GREEN = (60, 180, 75)
 YELLOW = (255, 225, 25)
@@ -22,8 +22,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 Colors = [WHITE, GREEN, YELLOW, BLUE, ORANGE, GRAY, MINT, RED, BLACK]
-Colors_index = [_ for _ in range(len(Colors))]
-# print(Colors_index)
+Colors_index = [_ for _ in range(len(Colors))] 
 
 # Ancho y alto de los bloques
 # WIDTH = 20
@@ -31,7 +30,7 @@ Colors_index = [_ for _ in range(len(Colors))]
 
 # espacio entre casillas
 MARGIN = 0
-global grid_1
+global grid_1 #Consideramos a esta variable global como el mapa de nuestro pantalla, donde cada 0 representara 42 * 42 pixeles.
 
 grid_1 = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -57,6 +56,7 @@ ALTO = 420
 LARGO = 420
 WINDOW_SIZE = [ALTO, LARGO]
 screen = pygame.display.set_mode(WINDOW_SIZE)
+
 # Titulo
 pygame.display.set_caption("Proyecto ia")
 
@@ -70,16 +70,15 @@ done = False
 clock = pygame.time.Clock()
 
 
-class Bola:
-    velocidad = 0
+class Bola:  # Creacion de clase Bola la cual es el gen que se utilizar para poder realizar este proyecto.
+    velocidad = 0 # Velocidad de la bola
     posX = 0
-    posY = 0
-    #pasoActual = 0
-    score = 0
-    distancia = 0
+    posY = 0    # Posiciones de Inicio 
+    score = 0    #Heuristica Basada en su puntaje
+    distancia = 0   # Distancia hasta el objetivo
     is_ded = False
     choque = False
-    mutacion = 0.15
+    mutacion = 0.15 # Porcentaje de mutacion
 
     def __init__(self, v, c, px, py, pasos_maximos=None):
         if pasos_maximos == None:
@@ -89,8 +88,7 @@ class Bola:
             self.posY = py
             self.pasos = []
             self.score = 0
-            self.pasoActual=0
-            
+            self.pasoActual=0            
         else:
             self.velocidad = v
             self.color = c
@@ -101,22 +99,19 @@ class Bola:
             self.score = 0
             self.pasoActual=0
 
-    def crear_pasos(self, _pasos_maximos):
+    def crear_pasos(self, _pasos_maximos): # Inicializa un random asiganandole 4  valores random, el cual sera los pasos que dara la bola(gen).
         for i in range(_pasos_maximos):
-            # self.pasos[i] = numpy.random.randint(0, 4)
             self.pasos.append(numpy.random.randint(0, 4))
 
-        # print(self.pasos)
-
-    def objetivo(self, objetivoX, objetivoY):
+    def objetivo(self, objetivoX, objetivoY): #Nos permite saber a que distancia se encuenta la bola(gen) del objetivo(meta)
         return numpy.sqrt(numpy.power(self.posX - objetivoX, 2) + numpy.power(self.posY - objetivoY, 2)) < 10
 
-    def mover(self, objetivoX, objetivoY):
+    def mover(self, objetivoX, objetivoY): #Definimos esta funcions para que la bola(gen) realice sus movimientos respecto a los pasos asiganos anteriormente
         if not self.is_ded:
             if not self.choque:
                 if self.objetivo(objetivoX, objetivoY):
                     self.is_ded = True
-                    print("LLEGUE AAAAAA")
+                    print("Llegue al objetivo")
                 elif screen.get_height() > self.posY >= 0 and screen.get_width() > self.posX >= 0:
                     if self.pasoActual < len(self.pasos):
                         if self.pasos[self.pasoActual] == 0:
@@ -130,21 +125,16 @@ class Bola:
                         else:
                             print("no me muevo", self.pasoActual)
                         self.pasoActual += 1
-                        # print(self.pasos)
                     else:
                         self.is_ded = True
-                        # self.calcularScore()
-                        # print("mori de viejo :c")
                 else:
                     self.choque = True
                     self.is_ded = True
-                    # self.calcularScore()
-                    # print("choque y mori")
 
     def graficar(self, screen):
         pygame.draw.circle(screen, self.color, [self.posX, self.posY], 5, 1)
 
-    def calcularScore(self, destX, destY, _inicX, _inicY):
+    def calcularScore(self, destX, destY, _inicX, _inicY): #Utilizamos esta funcion para poder calcular el valor de la heuristca que tiene cada bola respecto al objetivo(meta)
         if self.choque:
             self.score = -99
         else:
@@ -154,7 +144,6 @@ class Bola:
                                                                     numpy.power(_inicY - destY, 2)) / numpy.sqrt(
                 numpy.power(self.posX - _inicX, 2) + numpy.power(self.posY - _inicY, 2)))
         print(self.score)
-        # print(self.score)
 
     def get_pasos(self):
         return self.pasos
@@ -168,19 +157,18 @@ class Bola:
     def morir(self):
         self.is_ded = True
         self.choque = True
-        # print("choque y mori")
-    def reiniciar_pasos(self):
+
+    def reiniciar_pasos(self): #Utilizamos esta funcion para poder reniciar los pasos que la bola(gen) tenia cuando se guardo y asi solo tener el valor real de sus pasos.
         self.pasoActual=0
 
-
-class Pared:
+class Pared: #Se crea esta clase la cual nos permitira la creacion de paredes dentro del mapa de juego.
     def graficar_pared(self, _screen):
         pygame.draw.rect(_screen, GRAY, self.body, 1)
 
-    def unir(self, _pared):
+    def unir(self, _pared):  # 
         pygame.Rect.union_ip(self.body, _pared)
 
-    def choque_pared_bola(self, _pos):
+    def choque_pared_bola(self, _pos): #Verificacion si la bola(gen), colisionaron entre ellas
         return pygame.Rect.collidepoint(self.body, _pos[0], _pos[1])
 
     def get_body(self):
@@ -194,19 +182,16 @@ class Pared:
         self.body = pygame.Rect((MARGIN + WIDTH) * self.posY, (MARGIN + HEIGHT) * self.posX,
                                 WIDTH * self.ancho, HEIGHT * self.alto)
 
-
-
-class Juego:
-    print("AAAA")
-    def init_menu(self):
+class Juego: #Se define esta clase puesto que sera la controladora para iniciar el juego.
+    def init_menu(self): #Se define esta funcion para la creacion de un menu.
         surface = pygame.display.set_mode(WINDOW_SIZE)   
         menu = pygame_menu.Menu('Main Menu',400, 400,theme=pygame_menu.themes.THEME_BLUE)
 
         about_menu=pygame_menu.Menu(400,400,"Sobre Nosotros",theme=pygame_menu.themes.THEME_DARK)
         about_menu.add.label("Realizado por :",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
-        about_menu.add.label(" Hamill Cavero - u2018 ",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        about_menu.add.label(" Hamill Cavero - u201821775",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
         about_menu.add.label(" Elvis Morales - u201820751",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
-        about_menu.add.label(" Aldo Gomez - u2018",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        about_menu.add.label(" Aldo Gomez - u201822450",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
         about_menu.add.vertical_margin(30)
         about_menu.add.button('Return to menu', pygame_menu.events.BACK)
 
@@ -219,8 +204,7 @@ class Juego:
         instrucciones_menu.add.label("Click Scroll Mouse: Iniciar la genetica",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
         instrucciones_menu.add.label("Numero 9: Para abrir un mapa guardado \nal iniciar el juego",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
         instrucciones_menu.add_button("Return to menu",pygame_menu.events.BACK)
-        
-       
+           
         menu.add.button('Play',self.iniciar_simulacion)
         menu.add.button('About', about_menu)
         menu.add.button('Instrucciones', instrucciones_menu)
@@ -228,7 +212,7 @@ class Juego:
         
         menu.mainloop(surface)
         
-    def dibujar_fondo(self, creacion):
+    def dibujar_fondo(self, creacion): # Se utiliza esta funcion para poder dibujar en la pantalla
         screen.fill(WHITE)
         for row in range(celdaH):
             for column in range(celdaV):
@@ -253,47 +237,35 @@ class Juego:
                 else:
                     self.dibujar_paredes()
 
-    def crea_bolas(self, N):
+    def crea_bolas(self, N): #Esta funcion nos permite la creacion de la lista de bola segun la poblacion ingresada.
         for _ in range(N):
             self.lista_bolas[_] = Bola(self.velocidad_bola, RED, self.inicioX, self.inicioY, self.pasos_maximos)
-        # print(lista_bolas)
-        # input("aaaa")
-
-    def mover_bolas(self):
+    def mover_bolas(self): #Realiza el movimiento de las bolas(genes)
         for bb in self.lista_bolas:
             if self.lista_bolas[bb].is_ded is False:
-                # print("Bola: ", bb)
                 self.lista_bolas[bb].mover(self.destinoX, self.destinoY)
 
-    def dibujar_bolas(self):
+    def dibujar_bolas(self): #Imprime las bolas(genes) en pantalla
         for i in range(len(self.lista_bolas)):
             self.lista_bolas[i].graficar(screen)
 
-    def calcular_score(self):
+    def calcular_score(self):#Calcula el valor de heuristica para cada bola dentro de la lista de bolas(genes)
         for i in range(len(self.lista_bolas)):
             self.lista_bolas[i].calcularScore(self.destinoX, self.destinoX, self.inicioX, self.inicioY)
 
-    def all_dead(self):
+    def all_dead(self): #Verifica si las bolas(genes) murieron(colisonaron)
         for _ in self.lista_bolas:
             if self.lista_bolas[_].is_ded:
                 return True
             else:
                 return False
 
-    def revivir(self, bola):
-        bola.is_ded = False
-        bola.choque = False
-        bola.posX = self.inicioX
-        bola.posY = self.inicioY
-
-    def reinicia_pasos(self,bola):
-        bola.pasoActual=0
-
     def mostrar_lista(self):
         for _ in self.lista_bolas:
             print(_, "  ", self.lista_bolas[_].get_score(), self.lista_bolas[_].get_pasos())
 
-    def guardar_lista(self,iniciox,inicioy,llegadax,llegaday,velocidad,pobla,max_pasos):
+    #Utilizamos esta funcion para poder guardar los valores de inicializacion de las Bolas(Genes)
+    def guardar_datos_inicializacion(self,iniciox,inicioy,llegadax,llegaday,velocidad,pobla,max_pasos):
         fic=open('LasList.txt',"w")
         fic.write(str(iniciox)+",")
         fic.write(str(inicioy)+",")
@@ -303,20 +275,13 @@ class Juego:
         fic.write(str(pobla)+",")
         fic.write(str(max_pasos))
       
-
-    def abrir_guardado(self):
+    #Esta funcion nos permite leer los valores de inicializacion guardados
+    def abrir_Valores_inicializacion(self):
         fic=open("LasList.txt","r")
         dtos=fic.readlines()
         sv=[]
         for lines in dtos:
-            sv.append(lines.split(","))
-        #print(sv)
-        #sv=list(map(int,sv))
-        #sv = [int(s) for s in sv]
-        #print(type(sv[0][0]))
-        #print(dtos)
-
-        
+            sv.append(lines.split(","))     
         self.inicioX =int(sv[0][0])
         self.inicioY =int(sv[0][1])
         self.destinoX = int(sv[0][2])
@@ -324,22 +289,18 @@ class Juego:
         self.velocidad_bola =int(sv[0][4])
         self.poblacion = int(sv[0][5])
         self.pasos_maximos = int(sv[0][6])
-        
-        #print(dtos)
 
-
-
+    #Esta funcion nos permite guardar la ultima generacion de las bolas(Genes) directamente del diccionario
     def guardar_ultimageneracion(self):
         numpy.save("ultima_gen.npy",self.lista_bolas) 
 
-    def cargar_ultimagen(self):
-        #self.lista_bolas.clear()
+    #Nos permite leer los datos guardados de la ultima generacion y insertalos en la lista de bolas
+    def cargar_ultimageneracion(self):
         self.lista_bolas = numpy.load("ultima_gen.npy", allow_pickle="TRUE").item()
         for _ in self.lista_bolas:
             self.lista_bolas[_]=self.lista_bolas[_].reiniciar_pasos()
-        #return self.lista_bolas
 
-    def Parejas(self):
+    def Parejas(self): #Utilizamos esta funcion para agregar parejas a nuestra poblacion de genes de forma random (aleatoria).
         Aleatorio = random.sample(range(int(self.poblacion / 2), self.poblacion), int(self.poblacion / 2))
         Pareja = {}
         for i in range(int(self.poblacion / 2)):
@@ -347,27 +308,22 @@ class Juego:
             Pareja[Aleatorio[i]] = i
         return Pareja
 
-    def selecciona_bolitas(self):
+    def selecciona_bolitas(self): #Selecciona las parejas con mayor puntaje en el juego para poder obtener a los mejores de su generacion
         print('---Seleccion----')
         lista_seleccion = self.Parejas()
-        # print('Parejas', lista_seleccion)
         for k, v in lista_seleccion.items():
             if self.lista_bolas[k].score >= self.lista_bolas[v].score:
-                self.revivir(self.lista_bolas[k])
                 self.lista_bolas[v] = self.lista_bolas[k]
             else:
-                self.revivir(self.lista_bolas[v])
                 self.lista_bolas[k] = self.lista_bolas[v]
 
     def cruzar_bolitas(self):
         print('-----Cruce ------')
         lista_seleccion = self.Parejas()
-        # print('Parejas', lista_seleccion)
         item = 0
         for k, v in lista_seleccion.items():
             if item % 2 == 0:
                 Punto = random.randint(1, self.pasos_maximos)
-                # print('punto', Punto)
                 Hijo1 = Bola(self.velocidad_bola, RED, self.inicioX, self.inicioY)
                 Hijo2 = Bola(self.velocidad_bola, RED, self.inicioX, self.inicioY)
                 Padre1 = self.lista_bolas[k]
@@ -378,45 +334,34 @@ class Juego:
                 Hijo2.get_pasos().extend(Padre2.pasos[0:Punto])
                 Hijo2.get_pasos().extend(Padre1.pasos[Punto:])
 
-                # Hijo1.extend(Padre1.pasos[0:Punto])
-                # Hijo1.extend(Padre2.pasos[Punto:])
-                # Hijo2.extend(Padre2.pasos[0:Punto])
-                # Hijo2.extend(Padre1.pasos[Punto:])
                 self.lista_bolas[k] = Hijo1
                 self.lista_bolas[v] = Hijo2
             item = item + 1
 
-    def mutar_bolitas(self):
+    def mutar_bolitas(self): # Muta un valor en los pasos que da la bola, para que  pueda aprender hasta llegar a la meta.
         for _ in self.lista_bolas:
             if random.random() > self.lista_bolas[_].mutacion:
-                # print(lista_bolas[_].pasos)
                 random_pos = numpy.random.randint(0, self.pasos_maximos - 1)
                 random_val = numpy.random.randint(0, 4)
                 self.lista_bolas[_].pasos[random_pos] = random_val
-                # print(lista_bolas[_].pasos)
 
-            # for i in self.lista_bolas[_].pasos[i]:
-            #     if random.random() < self.lista_bolas[_].mutacion:
-            #         random_val = numpy.random.randint(0, 4)
-            #         self.lista_bolas[_].pasos[i] = random_val
-
-    def dibujar_destino(self):
+    def dibujar_destino(self): #Imprime el punto de destino
         pygame.draw.circle(screen, GREEN, [self.destinoX, self.destinoY], 5)
 
+#Estas dos funciones nos permiten poner paredes en el mapa y borrarlas antes de iniciar el juego
     def borrar_ficha(self, _row, _column):
         if grid_1[_row][_column] == 1:
             grid_1[_row][_column] = 0
 
     def insertar_pieza(self, _row, _column):
         global grid_1
-        # grid2 = grid_1.copy()
         grid2 = copy.deepcopy(grid_1)
         if (grid2[_row][_column] + 1) % 2 != 0:
             grid2[_row][_column] += 1
         else:
             return grid_1
         grid_1 = copy.deepcopy(grid2)
-
+#Esta funcion realiza la creacion del laberinto, segun el tamaño de la CELDAH y CELDA V
     def crear_laberinto(self):
         for row in range(celdaH):
             for column in range(celdaV):
@@ -447,22 +392,15 @@ class Juego:
                     self.paredes.append(pared)
                     grid_1[row][column] = 3
                     print("rect")
-        #         if grid_1[row][column] == 1:
-        #             pared = Pared(row, column, 1, 1)
-        #             self.paredes.append(pared)
-        #             grid_1[row][column] = 3
-        #             print("rect")
-        # for _ in range(len(self.paredes[0:])):
-        #     self.paredes[0].unir(self.paredes[_].get_body())
-        #     # pygame.Rect.unionall_ip(self.paredes[0].body, self.paredes[_].body)
     
-
+    #Nos permite guardar el mapa, en el que estamos trabajando
     def guardar_mapa2(self):
         fic=open("mapa_save.txt","w")
-        for i in range(10):
-            for j in range(10):
+        for i in range(len(grid_1)):
+            for j in range(len(grid_1[i])):
                 fic.write(str(grid_1[i][j]))
        
+    #Nos permite leer y cargar el mapa guardado
     def cargar_mapa2(self):
         global grid_1
         fic=open("mapa_save.txt","r")
@@ -488,20 +426,19 @@ class Juego:
            for j in range(len(grid_1[i])):
                 if grid_1[i][j]==3:
                     grid_1[i][j]=1
-        #return grid_1
-        
-
-
+    
     def dibujar_paredes(self):
         for _ in range(len(self.paredes)):
             self.paredes[_].graficar_pared(screen)
 
+    #Verifica si la bola(gen) choco contra alguna pared
     def choque_pared(self):
         for _ in range(len(self.paredes)):
             for i in range(len(self.lista_bolas)):
                 if self.paredes[_].choque_pared_bola(self.lista_bolas[i].get_pos()):
                     self.lista_bolas[i].morir()
 
+    #Inicializa todas las funciones para poder comenzar con el juego de Inteligencia Artificial mediante algoritmos geneticos
     def iniciar_simulacion(self):
         done = False
         go = False
@@ -511,17 +448,17 @@ class Juego:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # Cerrar el programa?
                     done = True  # Si
-                    pygame.quit()
+                    pygame.quit() #Cierra el programa
 
-                elif event.type==pygame.KEYDOWN:
-                    if  event.key==pygame.K_9:
+                elif event.type==pygame.KEYDOWN: #Verifica si se ha presionado alguna tecla
+                    if  event.key==pygame.K_9: #Inicializa el juego con los datos guardados
                         go=True
                         self.cargar_mapa2()
-                        self.abrir_guardado()
-                        self.cargar_ultimagen()
+                        self.abrir_Valores_inicializacion()
+                        self.cargar_ultimageneracion()
                         self.crear_laberinto()
 
-                    if  event.key==pygame.K_7:
+                    if  event.key==pygame.K_7: #Nos permite seleccionar el inicio de la bola(gen)
                         save=False
                         while save is not True:
                             for evento in pygame.event.get():
@@ -532,7 +469,7 @@ class Juego:
                                     print(self.inicioX,self.inicioY)
                                     save=True
 
-                    if  event.key==pygame.K_8:
+                    if  event.key==pygame.K_8:#Nos permite seleccionar el destino que tendra que llegar la bola(gen)
                         save=False
                         while save is not True:
                             for evento in pygame.event.get():
@@ -543,7 +480,7 @@ class Juego:
                                     print(self.destinoX,self.destinoY)
                                     save=True
                         
-                elif event.type == pygame.MOUSEBUTTONDOWN:
+                elif event.type == pygame.MOUSEBUTTONDOWN: #Detecta si estamos realizando clicks con el mouse
                     pos = pygame.mouse.get_pos()
                     if event.button == 2:
                         go = True
@@ -559,9 +496,6 @@ class Juego:
                             self.insertar_pieza(row, column)
                         print("Click ", pos, "Grid coordinates: ", row, column)
 
-                # elif event.type == pygame.key.get_pressed():
-                #     go = True
-                #     print("aa")
             self.dibujar_fondo(1)
             clock.tick(30)
             pygame.display.flip()
@@ -573,15 +507,13 @@ class Juego:
                self.mover_bolas()
            else:
                self.calcular_score()
-               # print("Bolitas resultado")
-               # self.mostrar_lista()
+
                self.selecciona_bolitas()
-               # self.mostrar_lista()
+
                self.cruzar_bolitas()
-               # self.mostrar_lista()
+
                self.mutar_bolitas()
 
-               # input("Press Enter to continue...")
            for event in pygame.event.get():  # Registra eventos variados
                if event.type == pygame.QUIT:  # Cerrar el programa?
                    done = True  # Si
@@ -596,11 +528,10 @@ class Juego:
            pygame.display.flip()
 
         self.guardar_mapa2()
-        self.guardar_lista(self.inicioX,self.inicioY,self.destinoX,self.destinoY,self.velocidad_bola,self.poblacion,self.pasos_maximos)
+        self.guardar_datos_inicializacion(self.inicioX,self.inicioY,self.destinoX,self.destinoY,self.velocidad_bola,self.poblacion,self.pasos_maximos)
         self.guardar_ultimageneracion()
         pygame.quit()  # no borrar
-        #while True:
-         #   self.dibujar_fondo(0)
+
     def __init__(self, IX, IY, DX, DY, PP, PM, _Velocidad_bola):
         self.lista_bolas = {}
         self.destinoX = DX
@@ -612,7 +543,7 @@ class Juego:
         self.paredes = []
         self.velocidad_bola = _Velocidad_bola
 
-
+#Valores iniciales del juego
 Velocidad_bola = 6
 Population = 128
 Pasos_MAX = 400
@@ -620,6 +551,6 @@ Ini_X = 200
 Ini_Y = 350
 Des_X = 200
 Des_Y = 50
-
+#Comienza a correr todo el programa
 juego = Juego(Ini_X, Ini_Y, Des_X, Des_Y, Population, Pasos_MAX, Velocidad_bola)
 juego.init_menu()
