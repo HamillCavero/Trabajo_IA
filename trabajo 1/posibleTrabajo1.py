@@ -1,12 +1,13 @@
 from builtins import Warning
 
 import pygame
+import pygame_menu
 import copy
 import numpy
 import random
 import csv
 import pandas as pd
-import os
+
 
 # Define los coles a usarse, pueden agregarse mas
 RED = (230, 25, 75)
@@ -194,9 +195,39 @@ class Pared:
                                 WIDTH * self.ancho, HEIGHT * self.alto)
 
 
+
 class Juego:
     print("AAAA")
+    def init_menu(self):
+        surface = pygame.display.set_mode(WINDOW_SIZE)   
+        menu = pygame_menu.Menu('Main Menu',400, 400,theme=pygame_menu.themes.THEME_BLUE)
 
+        about_menu=pygame_menu.Menu(400,400,"Sobre Nosotros",theme=pygame_menu.themes.THEME_DARK)
+        about_menu.add.label("Realizado por :",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        about_menu.add.label(" Hamill Cavero - u2018 ",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        about_menu.add.label(" Elvis Morales - u201820751",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        about_menu.add.label(" Aldo Gomez - u2018",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        about_menu.add.vertical_margin(30)
+        about_menu.add.button('Return to menu', pygame_menu.events.BACK)
+
+        instrucciones_menu=pygame_menu.Menu(400,400,"Instrucciones",theme=pygame_menu.themes.THEME_DARK)
+        instrucciones_menu.add.label("El juego se autoguarda cuando se cierra.",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add.label("Numero 7 : para definir posicion \n del enemigo",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add.label("Numero 8 : para definir posicion \n del del jugador",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add.label("Click Izquierdo: Poner paredes",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add.label("Click Derecho: Quitar paredes",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add.label("Click Scroll Mouse: Iniciar la genetica",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add.label("Numero 9: Para abrir un mapa guardado \nal iniciar el juego",align=pygame_menu.locals.ALIGN_LEFT, font_size=20)
+        instrucciones_menu.add_button("Return to menu",pygame_menu.events.BACK)
+        
+       
+        menu.add.button('Play',self.iniciar_simulacion)
+        menu.add.button('About', about_menu)
+        menu.add.button('Instrucciones', instrucciones_menu)
+        menu.add.button('Quit', pygame_menu.events.EXIT)
+        
+        menu.mainloop(surface)
+        
     def dibujar_fondo(self, creacion):
         screen.fill(WHITE)
         for row in range(celdaH):
@@ -252,8 +283,8 @@ class Juego:
     def revivir(self, bola):
         bola.is_ded = False
         bola.choque = False
-        bola.posX = 200
-        bola.posY = 350
+        bola.posX = self.inicioX
+        bola.posY = self.inicioY
 
     def reinicia_pasos(self,bola):
         bola.pasoActual=0
@@ -337,8 +368,8 @@ class Juego:
             if item % 2 == 0:
                 Punto = random.randint(1, self.pasos_maximos)
                 # print('punto', Punto)
-                Hijo1 = Bola(self.velocidad_bola, RED, 200, 350)
-                Hijo2 = Bola(self.velocidad_bola, RED, 200, 350)
+                Hijo1 = Bola(self.velocidad_bola, RED, self.inicioX, self.inicioY)
+                Hijo2 = Bola(self.velocidad_bola, RED, self.inicioX, self.inicioY)
                 Padre1 = self.lista_bolas[k]
                 Padre2 = self.lista_bolas[v]
 
@@ -474,20 +505,44 @@ class Juego:
     def iniciar_simulacion(self):
         done = False
         go = False
+        save=False
         while go is not True:
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:  # Cerrar el programa?
                     done = True  # Si
                     pygame.quit()
 
                 elif event.type==pygame.KEYDOWN:
-                    if event.key==pygame.K_9:
+                    if  event.key==pygame.K_9:
                         go=True
                         self.cargar_mapa2()
                         self.abrir_guardado()
                         self.cargar_ultimagen()
                         self.crear_laberinto()
 
+                    if  event.key==pygame.K_7:
+                        save=False
+                        while save is not True:
+                            for evento in pygame.event.get():
+                                if evento.type == pygame.MOUSEBUTTONDOWN:  
+                                    pos = pygame.mouse.get_pos()
+                                    self.inicioX=pos[0]
+                                    self.inicioY=pos[1]
+                                    print(self.inicioX,self.inicioY)
+                                    save=True
+
+                    if  event.key==pygame.K_8:
+                        save=False
+                        while save is not True:
+                            for evento in pygame.event.get():
+                                if evento.type == pygame.MOUSEBUTTONDOWN:  
+                                    pos = pygame.mouse.get_pos()
+                                    self.destinoX=pos[0]
+                                    self.destinoY=pos[1]
+                                    print(self.destinoX,self.destinoY)
+                                    save=True
+                        
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
                     if event.button == 2:
@@ -532,17 +587,20 @@ class Juego:
                    done = True  # Si
                elif event.type == pygame.MOUSEBUTTONDOWN:
                    print(pygame.mouse.get_pos())
+                
            self.dibujar_fondo(0)
            self.dibujar_destino()
 
            self.dibujar_bolas()
            clock.tick(30)
            pygame.display.flip()
-        juego.guardar_mapa2()
+
+        self.guardar_mapa2()
+        self.guardar_lista(self.inicioX,self.inicioY,self.destinoX,self.destinoY,self.velocidad_bola,self.poblacion,self.pasos_maximos)
+        self.guardar_ultimageneracion()
         pygame.quit()  # no borrar
         #while True:
          #   self.dibujar_fondo(0)
-
     def __init__(self, IX, IY, DX, DY, PP, PM, _Velocidad_bola):
         self.lista_bolas = {}
         self.destinoX = DX
@@ -553,21 +611,15 @@ class Juego:
         self.pasos_maximos = PM
         self.paredes = []
         self.velocidad_bola = _Velocidad_bola
-    
 
 
-Ini_X = 200
-Ini_Y = 350
 Velocidad_bola = 6
-Des_X = 200
-Des_Y = 50
 Population = 128
 Pasos_MAX = 400
-#print(grid_1)
+Ini_X = 200
+Ini_Y = 350
+Des_X = 200
+Des_Y = 50
 
 juego = Juego(Ini_X, Ini_Y, Des_X, Des_Y, Population, Pasos_MAX, Velocidad_bola)
-juego.iniciar_simulacion()
-juego.guardar_lista(Ini_X,Ini_Y,Des_X,Des_Y,Velocidad_bola,Population,Pasos_MAX)
-juego.guardar_ultimageneracion()
-
-print("a")
+juego.init_menu()
